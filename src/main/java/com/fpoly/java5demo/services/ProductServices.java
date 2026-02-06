@@ -105,4 +105,9 @@ public class ProductServices {
 			return "Add product error";
 		}
 	}
+
+	public Product findById(int id) {
+		Optional<Product> prodOptional = productJPA.findById(id);
+		return prodOptional.isPresent() ? prodOptional.get() : null;
+	}
 }

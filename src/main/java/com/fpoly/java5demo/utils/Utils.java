@@ -3,15 +3,20 @@ package com.fpoly.java5demo.utils;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 public class Utils {
 	private static final Pattern SIZE_PATTERN = Pattern.compile("^([\\d.]+)\\s*([a-zA-Z]+)$");
+	public static final String COOKIE_KEY_USER_ID = "user_id";
+	public static final String COOKIE_KEY_ROLE = "role";
 
 	public static long parseToBytes(String input) {
 		if (input == null || input.trim().isEmpty()) {
 			return 0;
 		}
 
-		// Xóa khoảng trắng thừa, chuyển về chữ hoa (5mb -> 5MB)
 		String normalizedInput = input.trim().toUpperCase();
 
 		Matcher matcher = SIZE_PATTERN.matcher(normalizedInput);
@@ -19,12 +24,7 @@ public class Utils {
 		if (!matcher.find()) {
 			throw new IllegalArgumentException("Định dạng kích thước không hợp lệ: " + input);
 		}
-//		5MB => 
-//		matcher.group(1) = 5
-//		matcher.group(2) = MB
-		// Lấy phần số (ví dụ: 5.5)
 		double value = Double.parseDouble(matcher.group(1));
-		// Lấy phần đơn vị (ví dụ: MB)
 		String unit = matcher.group(2);
 
 		long multiplier = 1;
@@ -56,5 +56,39 @@ public class Utils {
 		}
 
 		return (long) (value * multiplier);
+	}
+
+	public static String getCookieValue(String key, HttpServletRequest request) {
+		Cookie[] cookies = request.getCookies();
+		if (cookies == null) {
+			return null;
+		}
+		for (Cookie cookie : cookies) {
+			if (cookie.getName().equals(key)) {
+				return cookie.getValue();
+			}
+		}
+		return null;
+	}
+
+	public static void clearCookie(HttpServletRequest request, HttpServletResponse response) {
+		Cookie[] cookies = request.getCookies();
+		if (cookies == null) {
+			return;
+		}
+
+		for (Cookie cookie : cookies) {
+			cookie.setMaxAge(-1);
+			response.addCookie(cookie);
+		}
+	}
+
+	public static void setCookie(String key, String value, HttpServletResponse response) {
+		int day = 60 * 60 * 24 * 7;
+
+		Cookie cookie = new Cookie(key, value);
+		cookie.setMaxAge(day);
+		cookie.setPath("/");
+		response.addCookie(cookie);
 	}
 }
